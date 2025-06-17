@@ -4,7 +4,7 @@ import net.javaguides.lms.entity.Book;
 import net.javaguides.lms.entity.User;
 import net.javaguides.lms.service.UserService;
 
-import org.hibernate.mapping.List;
+//import org.hibernate.mapping.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
