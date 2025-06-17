@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lms_db
+      # ❌ Remove MYSQL_USER and MYSQL_PASSWORD
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - lms-network
+
+  backend:
+    build: ./backend
+    container_name: lms-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/lms_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    networks:
+      - lms-network
+
+  frontend:
+    build: ./frontend
+    container_name: lms-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - lms-network
+
+volumes:
+  mysql-data:
+
+networks:
+  lms-network:
