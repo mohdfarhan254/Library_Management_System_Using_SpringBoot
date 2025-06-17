@@ -23,4 +23,5 @@ public class SecurityConfig {
                 .anyRequest().permitAll();  // ✅ This allows all endpoints
         return http.build();
     }
+
 }

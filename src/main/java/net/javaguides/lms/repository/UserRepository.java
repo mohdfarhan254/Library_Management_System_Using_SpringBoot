@@ -5,10 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    
-    // ✅ Used in login and service layer
+
+    // 🔐 Used during login
     Optional<User> findByUsername(String username);
-    
-    // ✅ Used in signup to check if username already exists
+
+    // 🧾 Used during registration to prevent duplicates
     boolean existsByUsername(String username);
 }

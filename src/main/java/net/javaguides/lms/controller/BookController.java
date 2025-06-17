@@ -3,64 +3,93 @@ package net.javaguides.lms.controller;
 import net.javaguides.lms.entity.Book;
 import net.javaguides.lms.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/books")
+@CrossOrigin(origins = "http://localhost:3000")  // Change if needed
 public class BookController {
 
     @Autowired
     private BookService bookService;
 
+    // ✅ Get all books for a specific user
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookService.findAll();
+    public ResponseEntity<?> getBooksByUser(@RequestParam Long userId) {
+        List<Book> books = bookService.findByUserId(userId);
+        return ResponseEntity.ok(books);
     }
 
+    // ✅ Get one book by ID for a user
     @GetMapping("/{id}")
-    public Book getBook(@PathVariable Long id) {
-        return bookService.findById(id);
+    public ResponseEntity<?> getBook(@PathVariable Long id, @RequestParam Long userId) {
+        Book book = bookService.findById(id);
+        if (book == null || !book.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can't access this book.");
+        }
+        return ResponseEntity.ok(book);
     }
 
+    // ✅ Add book for a specific user
     @PostMapping
-    public Book addBook(@RequestBody Book book) {
-        return bookService.save(book);
+    public ResponseEntity<?> addBook(@RequestBody Book book, @RequestParam Long userId) {
+        try {
+            Book savedBook = bookService.save(book, userId);
+            return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
+    // ✅ Update existing book — only by owner
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody Book book) {
-        // Additional logic to ensure you're updating the correct book
-        return bookService.save(book);
+    public ResponseEntity<?> updateBook(@PathVariable Long id, @RequestParam Long userId, @RequestBody Book book) {
+        Book existingBook = bookService.findById(id);
+        if (existingBook == null || !existingBook.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can't update this book.");
+        }
+
+        book.setId(id);
+        book.setUser(existingBook.getUser()); // Preserve ownership
+        Book updated = bookService.update(book);
+        return ResponseEntity.ok(updated);
     }
 
+    // ✅ Delete a book — only by owner
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Long id) {
+    public ResponseEntity<?> deleteBook(@PathVariable Long id, @RequestParam Long userId) {
+        Book book = bookService.findById(id);
+        if (book == null || !book.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can't delete this book.");
+        }
+
         bookService.deleteById(id);
+        return ResponseEntity.ok("Book deleted successfully");
     }
 
-    // ... other endpoints ...
-
-    @PostMapping("/{bookId}/borrow/{userId}")
-    public ResponseEntity<Book> borrowBook(@PathVariable Long bookId, @PathVariable Long userId) {
-        Book borrowedBook = bookService.borrowBook(bookId, userId);
-        if (borrowedBook != null) {
-            return ResponseEntity.ok(borrowedBook);
-        } else {
-            return ResponseEntity.badRequest().build(); // or a more descriptive error response
-        }
+    // ✅ Borrow a book — only by owner
+   @PostMapping("/{bookId}/borrow")
+public ResponseEntity<?> borrowBook(@PathVariable Long bookId, @RequestParam Long userId) {
+    try {
+        Book borrowed = bookService.borrowBook(bookId, userId);
+        return ResponseEntity.ok(borrowed);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
+}
 
-    @PostMapping("/{bookId}/return")
-    public ResponseEntity<Book> returnBook(@PathVariable Long bookId) {
-        Book returnedBook = bookService.returnBook(bookId);
-        if (returnedBook != null) {
-            return ResponseEntity.ok(returnedBook);
-        } else {
-            return ResponseEntity.badRequest().build(); // or a more descriptive error response
-        }
+@PostMapping("/{bookId}/return")
+public ResponseEntity<?> returnBook(@PathVariable Long bookId, @RequestParam Long userId) {
+    try {
+        Book returned = bookService.returnBook(bookId, userId);
+        return ResponseEntity.ok(returned);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
+}
+
 }

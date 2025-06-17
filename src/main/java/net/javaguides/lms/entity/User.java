@@ -2,12 +2,16 @@ package net.javaguides.lms.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Getter
 @Setter
+@NoArgsConstructor  // ✅ Required by Jackson
 @Entity
-@Table(name = "users")  // optional, just good naming
+@Table(name = "users")
 public class User {
 
     @Id
@@ -17,11 +21,15 @@ public class User {
     private String name;
 
     @Column(unique = true, nullable = false)
-    private String username;  // used for login (can also use email instead)
+    private String username;
 
     @Column(nullable = false)
-    private String password;  // hashed in real apps
+    private String password;
 
-    // Optional: add role/permissions in future
-    // private String role = "USER";
+    @Column(nullable = false)
+    private String role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+ //   @JsonManagedReference
+    private List<Book> books;
 }
