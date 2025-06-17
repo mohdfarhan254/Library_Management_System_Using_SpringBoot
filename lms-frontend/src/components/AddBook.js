@@ -1,79 +1,80 @@
+// src/components/AddBook.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function AddBook() {
-  const [book, setBook] = useState({ title: '', author: '', isbn: '' });
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setBook({ ...book, [e.target.name]: e.target.value });
-  };
+  const [book, setBook] = useState({ title: '', author: '' });
+  const navigate = useNavigate();
+  const userId = localStorage.getItem('userId');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!book.title || !book.author || !book.isbn) {
-      alert('⚠️ All fields are required.');
-      return;
-    }
-
     try {
-      setLoading(true);
-      const res = await fetch('http://localhost:8080/api/books', {
+      const res = await fetch(`http://localhost:8080/api/books?userId=${userId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(book),
       });
 
       if (res.ok) {
         alert('✅ Book added successfully!');
-        setBook({ title: '', author: '', isbn: '' }); // Clear form
+        navigate('/my-books');
       } else {
-        const errorText = await res.text();
-        alert('❌ Failed to add book: ' + errorText);
+        const err = await res.text();
+        alert('❌ ' + err);
       }
-    } catch (error) {
-      alert('❌ Server error: ' + error.message);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      alert('❌ Server error: ' + err.message);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', paddingTop: '2rem' }}>
-      <h2>Add a New Book</h2>
-      <form onSubmit={handleSubmit}>
+    <div style={containerStyle}>
+      <h2 style={{ marginBottom: '20px' }}>📘 Add a New Book</h2>
+      <form onSubmit={handleSubmit} style={formStyle}>
         <input
-          name="title"
+          type="text"
           placeholder="Title"
           value={book.title}
-          onChange={handleChange}
+          onChange={(e) => setBook({ ...book, title: e.target.value })}
           required
-          style={{ display: 'block', margin: '1rem 0', width: '100%' }}
+          style={inputStyle}
         />
         <input
-          name="author"
+          type="text"
           placeholder="Author"
           value={book.author}
-          onChange={handleChange}
+          onChange={(e) => setBook({ ...book, author: e.target.value })}
           required
-          style={{ display: 'block', margin: '1rem 0', width: '100%' }}
+          style={inputStyle}
         />
-        <input
-          name="isbn"
-          placeholder="ISBN"
-          value={book.isbn}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', margin: '1rem 0', width: '100%' }}
-        />
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: '0.5rem' }}>
-          {loading ? 'Adding...' : 'Add Book'}
-        </button>
+        <button type="submit" style={buttonStyle}>Add Book</button>
       </form>
     </div>
   );
 }
+
+const containerStyle = {
+  maxWidth: '400px',
+  margin: '50px auto',
+  textAlign: 'center',
+};
+
+const formStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '15px',
+};
+
+const inputStyle = {
+  padding: '10px',
+  fontSize: '16px',
+};
+
+const buttonStyle = {
+  padding: '10px',
+  fontSize: '16px',
+  cursor: 'pointer',
+};
 
 export default AddBook;

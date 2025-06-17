@@ -1,52 +1,68 @@
+// src/components/Signup.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Signup() {
+  const [user, setUser] = useState({ username: '', password: '' });
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', password: '' });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const handleSignup = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Attempting signup with", form);
 
     try {
       const res = await fetch('http://localhost:8080/api/users/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(form)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
       });
-
-      const text = await res.text();
-      console.log("Response:", res.status, text);
 
       if (res.ok) {
         alert('✅ Signup successful!');
-        navigate('/');
+        navigate('/login');
       } else {
-        alert('❌ Signup failed: ' + text);
+        const error = await res.text();
+        alert('❌ ' + error);
       }
-    } catch (error) {
-      console.error("Signup error:", error);
-      alert('❌ Server Error: ' + error.message);
+    } catch (err) {
+      alert('❌ Server Error: ' + err.message);
     }
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>🔐 Signup</h2>
-      <form onSubmit={handleSignup}>
-        <input type="text" name="username" placeholder="Username" value={form.username} onChange={handleChange} required />
-        <br /><br />
-        <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-        <br /><br />
-        <button type="submit">Signup</button>
+    <div style={{ maxWidth: '400px', margin: '50px auto' }}>
+      <h2>Signup</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Username:</label>
+          <input
+            type="text"
+            name="username"
+            value={user.username}
+            onChange={handleChange}
+            required
+            style={{ width: '100%' }}
+          />
+        </div>
+        <div style={{ marginTop: '10px' }}>
+          <label>Password:</label>
+          <input
+            type="password"
+            name="password"
+            value={user.password}
+            onChange={handleChange}
+            required
+            style={{ width: '100%' }}
+          />
+        </div>
+        <button type="submit" style={{ marginTop: '15px' }}>Signup</button>
       </form>
+      <p style={{ marginTop: '10px' }}>
+        Already have an account? <Link to="/login">Login</Link>
+      </p>
     </div>
   );
 }

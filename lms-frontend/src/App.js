@@ -1,29 +1,51 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
+// src/App.js
+import React, { useEffect, useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  //useNavigate,
+} from 'react-router-dom';
+
 import Login from './components/Login';
 import Signup from './components/Signup';
-import HomePage from './components/HomePage';
-import BookList from './components/BookList';
+import Home from './components/Home';
 import AddBook from './components/AddBook';
+import MyBooks from './components/MyBooks';
 import EditBook from './components/EditBook';
-import AllUsers from './components/AllUsers';
+import Navbar from './components/Navbar';
+
+function AppContent() {
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('userId'));
+  const location = useLocation();
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('userId'));
+  }, [location]);
+
+  return (
+    <>
+      {isLoggedIn && <Navbar onLogout={() => setIsLoggedIn(false)} />}
+      <Routes>
+        <Route path="/" element={<Navigate to={isLoggedIn ? '/home' : '/login'} />} />
+        <Route path="/login" element={!isLoggedIn ? <Login onLogin={() => setIsLoggedIn(true)} /> : <Navigate to="/home" />} />
+        <Route path="/signup" element={!isLoggedIn ? <Signup /> : <Navigate to="/home" />} />
+        <Route path="/home" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/add-book" element={isLoggedIn ? <AddBook /> : <Navigate to="/login" />} />
+        <Route path="/my-books" element={isLoggedIn ? <MyBooks /> : <Navigate to="/login" />} />
+        <Route path="/books/edit/:id" element={isLoggedIn ? <EditBook /> : <Navigate to="/login" />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/books" element={<BookList />} />
-        <Route path="/add-book" element={<AddBook />} />
-        <Route path="/edit-book/:id" element={<EditBook />} />
-        <Route path="/users" element={<AllUsers />} />
-
-      </Routes>
-    </BrowserRouter>
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 
